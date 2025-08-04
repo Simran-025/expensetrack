@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Tracker</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .input-section, .expense-list {
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #999;
+      padding: 8px;
+      text-align: center;
+    }
+    button {
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    #logout-btn {
+      float: right;
+      margin-bottom: 20px;
+      background: #f44336;
+      color: white;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="logout-btn" onclick="logout()">Logout</button>
+
+  <div class="input-section">
+    <h2>Add Expense</h2>
+    <label for="category-select">Category</label>
+    <select id="category-select">
+      <option value="College fee">College fee</option>
+      <option value="Rent">Rent</option>
+      <option value="Transport">Transport</option>
+      <option value="Medicine">Medicine</option>
+      <option value="Hangout">Hangout</option>
+      <option value="Shopping">Shopping</option>
+      <option value="Grocery">Grocery</option>
+    </select>
+    <br><br>
+    <label for="amount-input">Amount</label>
+    <input type="number" id="amount-input" />
+    <br><br>
+    <label for="date-input">Date:</label>
+    <input type="date" id="date-input" />
+    <br><br>
+    <button id="add-btn">Add</button>
+  </div>
+
+  <div class="expense-list">
+    <h2>Expenses List</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Amount</th>
+          <th>Date</th>
+          <th>Delete</th>
+        </tr>
+      </thead>
+      <tbody id="expense-table-body"></tbody>
+      <tfoot>
+        <tr>
+          <td><strong>Total:</strong></td>
+          <td id="total-amount"></td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <script>
+    // Block access if user not logged in
+    const loggedInUser = localStorage.getItem('loggedInUser');
+    if (!loggedInUser) {
+      alert("You must be logged in to access the tracker.");
+      window.location.href = "login.html";
+    }
+
+    // Load existing expenses for this user
+    let expenses = JSON.parse(localStorage.getItem(`expenses_${loggedInUser}`)) || [];
+
+    const tableBody = document.getElementById('expense-table-body');
+    const totalAmount = document.getElementById('total-amount');
+
+    function renderTable() {
+      tableBody.innerHTML = '';
+      let total = 0;
+
+      expenses.forEach((expense, index) => {
+        total += parseFloat(expense.amount);
+        const row = `
+          <tr>
+            <td>${expense.category}</td>
+            <td>${expense.amount}</td>
+            <td>${expense.date}</td>
+            <td><button onclick="deleteExpense(${index})">Delete</button></td>
+          </tr>
+        `;
+        tableBody.innerHTML += row;
+      });
+
+      totalAmount.textContent = total.toFixed(2);
+    }
+
+    function deleteExpense(index) {
+      expenses.splice(index, 1);
+      localStorage.setItem(`expenses_${loggedInUser}`, JSON.stringify(expenses));
+      renderTable();
+    }
+
+    document.getElementById('add-btn').addEventListener('click', () => {
+      const category = document.getElementById('category-select').value;
+      const amount = document.getElementById('amount-input').value;
+      const date = document.getElementById('date-input').value;
+
+      if (!category || !amount || !date) {
+        alert('Please fill in all fields.');
+        return;
+      }
+
+      const newExpense = { category, amount, date };
+      expenses.push(newExpense);
+      localStorage.setItem(`expenses_${loggedInUser}`, JSON.stringify(expenses));
+      renderTable();
+    });
+
+    function logout() {
+      localStorage.removeItem('loggedInUser');
+      window.location.href = 'login.html';
+    }
+
+    renderTable();
+  </script>
+</body>
+</html>
